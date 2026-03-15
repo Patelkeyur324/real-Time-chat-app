@@ -28,11 +28,11 @@ export const signup = async (req, res) => {
     });
 
     if (newUser) {
-      // generate jwt token here
-      generateToken(newUser._id, res);
+      const token = generateToken(newUser._id);
       await newUser.save();
 
       res.status(201).json({
+        token,
         _id: newUser._id,
         fullName: newUser.fullName,
         email: newUser.email,
@@ -61,9 +61,10 @@ export const login = async (req, res) => {
       return res.status(400).json({ message: "Invalid credentials" });
     }
 
-    generateToken(user._id, res);
+    const token = generateToken(user._id);
 
     res.status(200).json({
+      token,
       _id: user._id,
       fullName: user.fullName,
       email: user.email,
@@ -77,12 +78,6 @@ export const login = async (req, res) => {
 
 export const logout = (req, res) => {
   try {
-    res.cookie("jwt", "", {
-  maxAge: 0,
-  httpOnly: true,
-  sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-  secure: process.env.NODE_ENV === "production",
-});
     res.status(200).json({ message: "Logged out successfully" });
   } catch (error) {
     console.log("Error in logout controller", error.message);

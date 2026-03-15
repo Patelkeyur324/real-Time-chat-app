@@ -3,7 +3,10 @@ import { axiosInstance } from "../lib/axios.js";
 import toast from "react-hot-toast";
 import { io } from "socket.io-client";
 
-const BASE_URL = import.meta.env.MODE === "development" ? "http://localhost:5001" : "https://real-time-chat-app-zzyg.onrender.com";
+const BASE_URL =
+  import.meta.env.MODE === "development"
+    ? "http://localhost:5001"
+    : "https://real-time-chat-app-zzyg.onrender.com";
 
 export const useAuthStore = create((set, get) => ({
   authUser: null,
@@ -16,12 +19,19 @@ export const useAuthStore = create((set, get) => ({
 
   checkAuth: async () => {
     try {
-      const res = await axiosInstance.get("/auth/check");
+      // If no token stored, skip the request entirely
+      const token = localStorage.getItem("chat-token");
+      if (!token) {
+        set({ authUser: null, isCheckingAuth: false });
+        return;
+      }
 
+      const res = await axiosInstance.get("/auth/check");
       set({ authUser: res.data });
       get().connectSocket();
     } catch (error) {
       console.log("Error in checkAuth:", error);
+      localStorage.removeItem("chat-token");
       set({ authUser: null });
     } finally {
       set({ isCheckingAuth: false });
@@ -32,6 +42,7 @@ export const useAuthStore = create((set, get) => ({
     set({ isSigningUp: true });
     try {
       const res = await axiosInstance.post("/auth/signup", data);
+      localStorage.setItem("chat-token", res.data.token);
       set({ authUser: res.data });
       toast.success("Account created successfully");
       get().connectSocket();
@@ -46,9 +57,9 @@ export const useAuthStore = create((set, get) => ({
     set({ isLoggingIn: true });
     try {
       const res = await axiosInstance.post("/auth/login", data);
+      localStorage.setItem("chat-token", res.data.token);
       set({ authUser: res.data });
       toast.success("Logged in successfully");
-
       get().connectSocket();
     } catch (error) {
       toast.error(error.response.data.message);
@@ -60,6 +71,7 @@ export const useAuthStore = create((set, get) => ({
   logout: async () => {
     try {
       await axiosInstance.post("/auth/logout");
+      localStorage.removeItem("chat-token");
       set({ authUser: null });
       toast.success("Logged out successfully");
       get().disconnectSocket();
@@ -99,6 +111,7 @@ export const useAuthStore = create((set, get) => ({
       set({ onlineUsers: userIds });
     });
   },
+
   disconnectSocket: () => {
     if (get().socket?.connected) get().socket.disconnect();
   },
