@@ -1,5 +1,5 @@
 import express from "express";
-import dotenv from "dotenv"
+import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import path from "path";
@@ -14,16 +14,20 @@ dotenv.config();
 const PORT = process.env.PORT;
 const __dirname = path.resolve();
 
-app.use(express.json({ limit: '50mb' })); // increase to 50mb or more
-app.use(express.urlencoded({ limit: '50mb', extended: true })); // for form data
+const corsOptions = {
+  origin: ["https://react-chat-app-chatterly.vercel.app", "http://localhost:5173"],
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+};
 
+// ✅ CORS first, before everything else
+app.use(cors(corsOptions));
+app.options("*", cors(corsOptions)); // ✅ Explicit preflight handler
+
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ limit: "50mb", extended: true }));
 app.use(cookieParser());
-app.use(
-  cors({
-    origin:["https://react-chat-app-chatterly.vercel.app", "http://localhost:5173"],
-    credentials: true,
-  })
-);
 
 app.use("/api/auth", authRoutes);
 app.use("/api/messages", messageRoutes);
