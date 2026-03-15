@@ -20,7 +20,7 @@ app.use(express.urlencoded({ limit: '50mb', extended: true })); // for form data
 app.use(cookieParser());
 app.use(
   cors({
-    origin:["https://react-chat-app-chatterly.vercel.app/", "http://localhost:5173"],
+    origin:["https://react-chat-app-chatterly.vercel.app", "http://localhost:5173"],
     credentials: true,
   })
 );
